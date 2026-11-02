@@ -1,0 +1,55 @@
+hardware:
+  gpu: NVIDIA GeForce RTX 4050 Laptop GPU
+  pytorch_version: !!python/object/new:torch.torch_version.TorchVersion
+  - 2.14.1+cu126
+  cuda_version: '12.6'
+  amp_enabled: true
+model:
+  architecture: ViViT (Factorized Spatio-Temporal Encoder)
+  num_frames: 16
+  image_resolution:
+  - 224
+  - 224
+  patch_size: 16
+  tubelet_t: 1
+  embed_dim: 256
+  spatial_layers: 4
+  temporal_layers: 4
+  num_heads: 4
+  mlp_dim: 512
+  dropout: 0.1
+  num_classes: 5
+dataset:
+  name: BioVid Heat Pain Database (Part A)
+  total_dataset_size: 300
+  train_samples: 200
+  val_samples: 50
+  test_samples: 50
+  train_subjects_count: 8
+  val_subjects_count: 2
+  test_subjects_count: 2
+  train_subjects:
+  - 071309_w_21
+  - 071709_w_23
+  - 071814_w_23
+  - 071911_w_24
+  - 072414_m_23
+  - 072514_m_27
+  - 072609_w_23
+  - 072714_m_23
+  val_subjects:
+  - 082414_m_64
+  - 083009_w_42
+  test_subjects:
+  - 071313_m_41
+  - 071614_m_20
+training:
+  batch_size: 8
+  learning_rate: 0.0001
+  weight_decay: 0.01
+  epochs: 3
+  optimizer: AdamW
+  scheduler: CosineAnnealingLR
+  loss_function: CrossEntropyLoss
+  gradient_clip_norm: 1.0
+  seed: 42
