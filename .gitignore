@@ -22,3 +22,8 @@ Thumbs.db
 
 # BioVid Local Cache
 BioVid-DL/shared/cache/
+
+# PyTorch Model Checkpoints
+*.pt
+*.pth
+**/checkpoints/

@@ -11,7 +11,8 @@ from sklearn.metrics import (
     recall_score,
     f1_score,
     confusion_matrix,
-    classification_report
+    cohen_kappa_score,
+    mean_absolute_error,
 )
 
 PAIN_CLASSES = ["BL1", "PA1", "PA2", "PA3", "PA4"]
@@ -29,7 +30,7 @@ def save_training_curves(history, model_name, out_dir):
     ax.plot(epochs, history["val_loss"], 's--', label="Val Loss", color="#ff7f0e", linewidth=2)
     ax.set_title(f"{model_name}: Training and Validation Loss", fontsize=13, fontweight="bold")
     ax.set_xlabel("Epoch", fontsize=11)
-    ax.set_ylabel("Cross Entropy Loss", fontsize=11)
+    ax.set_ylabel("Focal Cross-Entropy Loss", fontsize=11)
     ax.legend(loc="upper right")
     plt.tight_layout()
     fig.savefig(os.path.join(out_dir, f"{model_name}_loss_curve.png"), dpi=300)
@@ -72,6 +73,16 @@ def evaluate_and_save(
     macro_f1 = f1_score(actuals, preds, average="macro", zero_division=0)
     weighted_f1 = f1_score(actuals, preds, average="weighted", zero_division=0)
 
+    try:
+        qwk = cohen_kappa_score(actuals, preds, weights="quadratic")
+    except Exception:
+        qwk = 0.0
+
+    try:
+        mae = mean_absolute_error(actuals, preds)
+    except Exception:
+        mae = 0.0
+
     per_class_f1 = f1_score(actuals, preds, average=None, zero_division=0)
     cm = confusion_matrix(actuals, preds, labels=range(len(class_names)))
     cm_norm = cm.astype('float') / (cm.sum(axis=1)[:, np.newaxis] + 1e-9)
@@ -86,6 +97,8 @@ def evaluate_and_save(
         "macro_recall": float(macro_r),
         "macro_f1": float(macro_f1),
         "weighted_f1": float(weighted_f1),
+        "qwk": float(qwk),
+        "mae": float(mae),
         "per_class_f1": {name: float(per_class_f1[i]) for i, name in enumerate(class_names)},
         "confusion_matrix": cm.tolist(),
         "normalized_confusion_matrix": cm_norm.tolist(),
@@ -153,5 +166,5 @@ def evaluate_and_save(
     fig.savefig(os.path.join(graphs_dir, f"{model_name}_actual_vs_predicted.png"), dpi=300)
     plt.close(fig)
 
-    print(f"[{model_name}] Evaluation Complete — Acc: {acc:.4f}, Macro-F1: {macro_f1:.4f}, Weighted-F1: {weighted_f1:.4f}")
+    print(f"[{model_name}] Complete — Acc: {acc:.4f} ({acc*100:.2f}%), Macro-F1: {macro_f1:.4f}, MAE: {mae:.3f}, QWK: {qwk:.3f}")
     return metrics
