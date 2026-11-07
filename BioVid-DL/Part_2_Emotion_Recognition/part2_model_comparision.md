@@ -17,7 +17,7 @@ Evaluations were conducted across two distinct database protocols:
 | Metric | Part D: 3D CNN (R3D-18) | Part D: Video Swin | Part E: 3D CNN (R3D-18) | Part E: Video Swin |
 | :--- | :--- | :--- | :--- | :--- |
 | **Number of Classes** | 7 Classes | 7 Classes | 5 Classes | 5 Classes |
-| **Test Accuracy** | **0.1923** | 0.1538 | **0.3750** | 0.2083 |
+| **Test Accuracy** | **0.1923 (19.23%)** | 0.1538 (15.38%) | **0.3750 (37.50%)** | 0.2083 (20.83%) |
 | **Macro-Precision** | **0.1837** | 0.1111 | **0.3800** | 0.1250 |
 | **Macro-Recall** | **0.1923** | 0.1538 | **0.3750** | 0.2083 |
 | **Macro-F1 Score** | **0.1154** | 0.0654 | **0.2882** | 0.1127 |
@@ -33,8 +33,8 @@ Evaluations were conducted across two distinct database protocols:
 
 #### Why 3D CNN (R3D-18) Wins in Predictive Performance:
 1. **Dominant Classification Accuracy Across Both Datasets**:
-   - On **Part D (7 classes)**: 3D CNN achieved **0.1923** accuracy and **0.1154** macro-F1, outperforming Video Swin (**0.1538** accuracy, **0.0654** macro-F1).
-   - On **Part E (5 classes)**: 3D CNN achieved an impressive **0.3750** accuracy and **0.2882** macro-F1, substantially surpassing Video Swin (**0.2083** accuracy, **0.1127** macro-F1).
+   - On **Part D (7 classes)**: 3D CNN achieved **0.1923 (19.23%)** accuracy and **0.1154** macro-F1, outperforming Video Swin (**0.1538 (15.38%)** accuracy, **0.0654** macro-F1).
+   - On **Part E (5 classes)**: 3D CNN achieved an impressive **0.3750 (37.50%)** accuracy and **0.2882** macro-F1, substantially surpassing Video Swin (**0.2083 (20.83%)** accuracy, **0.1127** macro-F1).
 2. **Inductive Bias of 3D Convolutions**:
    3D convolutions incorporate strong spatial locality and temporal continuity inductive biases. In facial video, muscle movements (e.g., zygomaticus major contraction during smiling/amusement or corrugator contraction during anger) involve spatially contiguous pixels shifting over consecutive frames. The 3×3×3 convolutional filters detect these continuous velocity vectors directly.
 3. **Pretrained Spatio-Temporal Representation**:

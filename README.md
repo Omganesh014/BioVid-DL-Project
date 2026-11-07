@@ -87,32 +87,32 @@ BioVid-DL/
 ## 4. Key Experimental Results & Scientific Benchmarks
 
 ### Pain Recognition Comparison (Part 1 & Part 3 Matched Test Subjects)
-| Model Architecture | Accuracy | Macro-F1 | Weighted-F1 | Latency (ms) | Parameter Count |
+| Model Architecture | Accuracy (Decimal / %) | Macro-F1 | Weighted-F1 | Latency (ms) | Parameter Count |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **ResNet-50** | 0.2350 | 0.1939 | 0.1939 | 18.9 ms | 24,559,685 |
-| **ViViT** | 0.2200 | 0.1158 | 0.1158 | 19.3 ms | 4,469,765 |
-| **CNN-LSTM** | 0.1900 | 0.1100 | 0.1100 | 18.3 ms | 14,463,045 |
-| **Multimodal CNN (Fusion)** | **0.2300** | **0.1821** | **0.1821** | **18.0 ms** | **11,542,933** |
-| *Video-Only (Multimodal CNN)* | *0.1900* | *0.0655* | *0.0655* | *18.0 ms* | *11,542,933* |
-| *All-Biosignals-Only* | *0.2050* | *0.0838* | *0.0838* | *18.5 ms* | *11,542,933* |
+| **ResNet-50** | **0.2350 (23.50%)** | 0.1939 | 0.1939 | 18.9 ms | 24,559,685 |
+| **ViViT** | 0.2200 (22.00%) | 0.1158 | 0.1158 | 19.3 ms | 4,469,765 |
+| **CNN-LSTM** | 0.1900 (19.00%) | 0.1100 | 0.1100 | 18.3 ms | 14,463,045 |
+| **Multimodal CNN (Fusion)** | **0.2300 (23.00%)** | **0.1821** | **0.1821** | **18.0 ms** | **11,542,933** |
+| *Video-Only (Multimodal CNN)* | *0.1900 (19.00%)* | *0.0655* | *0.0655* | *18.0 ms* | *11,542,933* |
+| *All-Biosignals-Only* | *0.2050 (20.50%)* | *0.0838* | *0.0838* | *18.5 ms* | *11,542,933* |
 
 ### Emotion Recognition Benchmark (Part 2)
-| Protocol & Model | Accuracy | Macro-F1 | Weighted-F1 | Latency (ms) | Parameter Count |
+| Protocol & Model | Accuracy (Decimal / %) | Macro-F1 | Weighted-F1 | Latency (ms) | Parameter Count |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Part D (7 Classes) — 3D CNN (R3D-18)** | 0.1923 | 0.1154 | 0.1189 | 18.7 ms | 33,299,399 |
-| **Part D (7 Classes) — Video Swin** | 0.1538 | 0.0654 | 0.0799 | 13.1 ms | 1,024,903 |
-| **Part E (5 Classes) — 3D CNN (R3D-18)** | **0.3750** | **0.2882** | **0.2630** | 19.2 ms | 33,298,885 |
-| **Part E (5 Classes) — Video Swin** | 0.2083 | 0.1127 | 0.1008 | 13.0 ms | 1,024,389 |
+| **Part D (7 Classes) — 3D CNN (R3D-18)** | **0.1923 (19.23%)** | 0.1154 | 0.1189 | 18.7 ms | 33,299,399 |
+| **Part D (7 Classes) — Video Swin** | 0.1538 (15.38%) | 0.0654 | 0.0799 | 13.1 ms | 1,024,903 |
+| **Part E (5 Classes) — 3D CNN (R3D-18)** | **0.3750 (37.50%)** | **0.2882** | **0.2630** | 19.2 ms | 33,298,885 |
+| **Part E (5 Classes) — Video Swin** | 0.2083 (20.83%) | 0.1127 | 0.1008 | 13.0 ms | 1,024,389 |
 
 ### Modality Ablation Breakdown (Part 3)
-| Configuration | Modality Channels | Accuracy | Macro-F1 | Key Scientific Finding |
+| Configuration | Modality Channels | Accuracy (Decimal / %) | Macro-F1 | Key Scientific Finding |
 | :--- | :--- | :--- | :--- | :--- |
-| **Complete Fusion** | Video + GSR + ECG + EMG | **0.2300** | **0.1821** | **Highest overall accuracy and balanced macro-F1** |
-| **Video Only** | Video only | 0.1900 | 0.0655 | Vulnerable to facial masking |
-| **All Biosignals** | GSR + ECG + EMG | 0.2050 | 0.0838 | Captures involuntary autonomic activation |
-| **GSR Only** | Galvanic Skin Response | 0.2000 | 0.0667 | Most decisive individual physiological channel |
-| **ECG Only** | Electrocardiogram | 0.2000 | 0.0667 | Contributes baseline autonomic tone |
-| **EMG Only** | Electromyography | 0.1850 | 0.0979 | Contributes muscular contraction spikes |
+| **Complete Fusion** | Video + GSR + ECG + EMG | **0.2300 (23.00%)** | **0.1821** | **Highest overall accuracy and balanced macro-F1** |
+| **Video Only** | Video only | 0.1900 (19.00%) | 0.0655 | Vulnerable to facial masking |
+| **All Biosignals** | GSR + ECG + EMG | 0.2050 (20.50%) | 0.0838 | Captures involuntary autonomic activation |
+| **GSR Only** | Galvanic Skin Response | 0.2000 (20.00%) | 0.0667 | Most decisive individual physiological channel |
+| **ECG Only** | Electrocardiogram | 0.2000 (20.00%) | 0.0667 | Contributes baseline autonomic tone |
+| **EMG Only** | Electromyography | 0.1850 (18.50%) | 0.0979 | Contributes muscular contraction spikes |
 
 ---
 

@@ -15,7 +15,7 @@ Evaluation was performed on the BioVid Heat Pain Database across **Part A, Part 
 
 | Metric | ResNet-50 | ViViT (Factorized Encoder) | CNN-LSTM |
 | :--- | :--- | :--- | :--- |
-| **Test Accuracy** | **0.2350** | 0.2200 | 0.1900 |
+| **Test Accuracy** | **0.2350 (23.50%)** | 0.2200 (22.00%) | 0.1900 (19.00%) |
 | **Macro-Precision** | **0.2078** | 0.1600 | 0.1100 |
 | **Macro-Recall** | **0.2350** | 0.2200 | 0.1900 |
 | **Macro-F1 Score** | **0.1939** | 0.1158 | 0.1100 |
@@ -36,7 +36,7 @@ Evaluation was performed on the BioVid Heat Pain Database across **Part A, Part 
 
 #### Why ResNet-50 Wins in Predictive Performance:
 1. **Highest Overall Accuracy & Macro-F1**:
-   ResNet-50 achieved the highest overall test accuracy (**0.2350**) and the highest macro-F1 score (**0.1939**). It successfully separated intermediate classes (`PA1`, `PA2`, `PA3`) where purely video-trained transformers struggled without extensive video pretraining.
+   ResNet-50 achieved the highest overall test accuracy (**0.2350 (23.50%)**) and the highest macro-F1 score (**0.1939**). It successfully separated intermediate classes (`PA1`, `PA2`, `PA3`) where purely video-trained transformers struggled without extensive video pretraining.
 2. **Transfer Learning Advantage**:
    ResNet-50’s deep 49-layer residual feature hierarchy, pretrained on ImageNet, provides rich, generalizable facial texture descriptors (wrinkles, eye squints, nasolabial folds) that transfer effectively even with limited clinical video datasets.
 3. **Consistent Class-Wise Sensitivity**:
@@ -44,7 +44,7 @@ Evaluation was performed on the BioVid Heat Pain Database across **Part A, Part 
 
 #### Why ViViT is the Architectural & Parameter Efficiency Winner:
 1. **81.8% Fewer Parameters**:
-   ViViT requires only **4.47 Million parameters** compared to ResNet-50's **24.56 Million parameters**, while still achieving **0.2200** accuracy (93.6% of ResNet-50's performance).
+   ViViT requires only **4.47 Million parameters** compared to ResNet-50's **24.56 Million parameters**, while still achieving **0.2200 (22.00%)** accuracy (93.6% of ResNet-50's performance).
 2. **Factorized Spatio-Temporal Attention**:
    ViViT’s factorized encoder processes spatial patches within frames before computing temporal attention across frames. This prevents the quadratic computational explosion of full 3D attention and specifically targets facial micro-expression temporal onset.
 3. **High Sensitivity to Severe Pain (PA4)**:
