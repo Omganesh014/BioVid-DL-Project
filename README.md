@@ -103,9 +103,33 @@ The system unifies all five partitions of the BioVid Heat Pain Database:
 
 ---
 
-## 📈 Comprehensive Experimental Benchmarks
+## 📈 Comprehensive Experimental Benchmarks (The 3-Tier Clinical Hierarchy)
 
-### 1. Pain Intensity Recognition (Parts A, B, C)
+### ⭐ Tier 1: Primary Clinical Emergency Alert (No Pain vs Severe Agony)
+When deployed for primary clinical triage—alerting whether a patient is comfortable (`BL1`: No Pain) versus in acute distress (`PA4`: Severe Pain Tolerance) across **100% unseen human subjects**:
+
+| Architecture / Configuration | Modality Channels | Accuracy | Severe Pain Recall | Precision | Binary F1 | ROC-AUC | Clinical Impact |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Multimodal CNN (Complete Fusion)** | **Video + GSR + ECG + EMG** | **65.00%** | **75.00%** | **62.50%** | **0.6818** | **0.704** | **Flags 30/40 severe pain emergencies (AUC 70.4%)** |
+| **All Biosignals Only** | GSR + ECG + EMG | 55.00% | 37.50% | 57.69% | 0.4545 | 0.600 | Involuntary sympathetic autonomic response |
+| **Video Only Baseline** | Video Kinematics | 53.75% | 85.00% | 52.31% | 0.6476 | 0.564 | Vulnerable to facial stoicism (false alarms) |
+| **ResNet-50 (Part 1)** | Video Kinematics | 53.75% | 95.00% | 52.05% | 0.6726 | 0.503 | Near random guessing on unmoving faces |
+| **ViViT (Part 1)** | Video Transformers | 50.00% | 100.0% | 50.00% | 0.6667 | 0.506 | Fails to separate without physiological grounding |
+| **CNN-LSTM (Part 1)** | Video Kinematics + LSTM | 48.75% | 97.50% | 49.37% | 0.6555 | 0.525 | High false alarm rate on stoic baseline faces |
+
+<div align="center">
+
+| ROC Curves: Clinical Severe Pain Alert | Multimodal CNN Clinical Confusion Matrix |
+| :---: | :---: |
+| ![Binary Pain ROC Curve](BioVid-DL/Final_Comparative_Analysis/graphs/binary_pain_roc_curve.png) | ![Binary Confusion Matrix](BioVid-DL/Final_Comparative_Analysis/graphs/binary_pain_confusion_matrix.png) |
+
+</div>
+
+> **Crucial Clinical Finding**: While purely visual models hover near **0.50 ROC-AUC** (equivalent to a coin flip because stoic patients withhold facial movements), **Multimodal CNN surges to 70.4% ROC-AUC and 75.0% Severe Pain Recall**. Sweat (GSR) and cardiac (ECG) telemetry provide the vital physiological signals needed to alert nurses to acute pain emergencies.
+
+---
+
+### ⭐ Tier 2: Facial Emotion Recognition (Parts D, E)
 Evaluated across unseen test subjects on 5-class pain recognition (`BL1`, `PA1`, `PA2`, `PA3`, `PA4`). Random baseline is **0.2000 (20.00%)**.
 
 | Architecture | Test Accuracy | Macro-Precision | Macro-Recall | Macro-F1 | Weighted-F1 | QWK | MAE | Latency (ms) | Parameters |
@@ -121,7 +145,7 @@ Evaluated across unseen test subjects on 5-class pain recognition (`BL1`, `PA1`,
 
 ---
 
-### 2. Emotion Recognition (Parts D, E)
+### ⭐ Tier 2: Facial Emotion Recognition (Parts D, E)
 Evaluated under subject-independent partitions across discrete affective states.
 
 | Protocol & Model | Classes | Random Baseline | Test Accuracy | Macro-Precision | Macro-Recall | Macro-F1 | Weighted-F1 | QWK | MAE | Latency (ms) | Parameters |
@@ -137,7 +161,7 @@ Evaluated under subject-independent partitions across discrete affective states.
 
 ---
 
-### 3. Multimodal Pain Recognition & Modality Ablation (Part 3)
+### ⭐ Tier 3: Fine-Grained 5-Class Pain Titration & Modality Ablation
 Ablation analysis isolating visual features vs. autonomic biosignals on matching test subjects.
 
 | Configuration | Modality Channels | Test Accuracy | Macro-Precision | Macro-Recall | Macro-F1 | Weighted-F1 | QWK | MAE | Parameters |
