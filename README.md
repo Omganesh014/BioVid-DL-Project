@@ -1,326 +1,184 @@
-<div align="center">
+# BioVid Multimodal Deep Learning for Pain Intensity and Emotion Recognition
 
-# 🧠 BioVid Deep Learning: ViViT Pain Recognition Architecture
-### Automated Objective Heat-Pain Level Assessment using Video Vision Transformers (ViViT Model 2)
-
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.14%2B-EE4C2C.svg?logo=pytorch&logoColor=white)](https://pytorch.org/)
-[![CUDA](https://img.shields.io/badge/CUDA-12.6-76B900.svg?logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-toolkit)
-[![Architecture](https://img.shields.io/badge/Architecture-ViViT%20Model%202%20(Factorized%20Encoder)-purple.svg)](https://arxiv.org/abs/2103.15691)
-[![Dataset](https://img.shields.io/badge/Dataset-BioVid%20Heat%20Pain%20(Part%20A)-orange.svg)](https://www.nit.ovgu.de/BioVid.html)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
-<br/>
-
-<p align="center">
-  <b>A zero-data-leakage, subject-independent deep learning framework for classifying calibrated pain intensity levels from high-resolution facial video sequences.</b>
-</p>
-
-</div>
+An end-to-end research deep learning system implementing, training, and benchmarking **six architectures** across **all five parts (A–E)** of the **BioVid Heat Pain Database**.
 
 ---
 
-## 📑 Table of Contents
-- [Overview](#-overview)
-- [Key Architectural Highlights](#-key-architectural-highlights)
-- [System Architecture & Data Flow](#-system-architecture--data-flow)
-- [The BioVid Heat Pain Database](#-the-biovid-heat-pain-database)
-- [ViViT Model 2: Factorized Spatial-Temporal Encoder](#-vivit-model-2-factorized-spatial-temporal-encoder)
-- [Repository Structure](#-repository-structure)
-- [Installation & Environment Setup](#-installation--environment-setup)
-- [End-to-End Pipeline Execution](#-end-to-end-pipeline-execution)
-- [Experimental Results & Evaluation](#-experimental-results--evaluation)
-- [Hyperparameters & Hardware Setup](#-hyperparameters--hardware-setup)
-- [References & Citation](#-references--citation)
+## 1. Project Experimental Architecture
 
----
+The project investigates three independent research parts under a **strict subject-independent evaluation protocol** guaranteeing zero cross-split leakage:
 
-## 🔬 Overview
-
-Assessment of physical pain in clinical and postoperative settings is conventionally reliant on self-report scales (such as the Visual Analog Scale). However, these subjective scales fail for non-verbal patients, infants, intensive care patients, and individuals with advanced dementia.
-
-This project implements an **automated, objective pain recognition pipeline** using **Video Vision Transformers (ViViT: Model 2 - Factorized Encoder)** trained on real facial video recordings from the **BioVid Heat Pain Database (Part A)**. The architecture processes raw video sequences ($1388 \times 1038$ at $25\text{ FPS}$) and classifies each $5.5$-second heat stimulation trial into one of 5 clinically calibrated pain levels:
-
-| Class Label | Level | Description | Thermal Target |
-|:---:|:---:|:---|:---|
-| **`BL1`** | $0$ | Baseline / Neutral skin sensation | Non-painful neutral skin temp ($\approx 32^\circ\text{C}$) |
-| **`PA1`** | $1$ | Pain Threshold | Individual pain threshold temperature ($T_1$) |
-| **`PA2`** | $2$ | Mild Pain | $T_1 + \frac{1}{3}(T_4 - T_1)$ |
-| **`PA3`** | $3$ | Moderate Pain | $T_1 + \frac{2}{3}(T_4 - T_1)$ |
-| **`PA4`** | $4$ | Severe Pain / Pain Tolerance | Maximum tolerable pain temperature ($T_4$) |
-
----
-
-## 🌟 Key Architectural Highlights
-
-1. **Strict Subject-Independent Splitting (Zero Data Leakage)**:
-   In facial video analysis, random frame-level or sample-level splitting leads to catastrophic feature memorization (identity cheating). Our manifest pipeline enforces mutually disjoint subject partitions:
-   $$\text{Train Subjects} \cap \text{Val Subjects} = \emptyset, \quad \text{Train Subjects} \cap \text{Test Subjects} = \emptyset, \quad \text{Val Subjects} \cap \text{Test Subjects} = \emptyset$$
-2. **Factorized Spatial-Temporal Transformer**:
-   Instead of calculating dense spatio-temporal self-attention across all tokens simultaneously ($\mathcal{O}((N \cdot T)^2)$ complexity), ViViT Model 2 factorizes the attention:
-   - **Spatial Transformer Block**: Computes spatial self-attention within individual frames with a spatial `[CLS]` token ($\mathcal{O}(T \cdot N^2)$).
-   - **Temporal Transformer Block**: Aggregates the resulting frame-level representations across time using a temporal `[CLS]` token ($\mathcal{O}(T^2)$).
-3. **Optimized Video Pipeline**:
-   - Uniform temporal frame sampling ($T = 16$ frames evenly spaced across 138-frame clips).
-   - Center square crop ($1038 \times 1038$) preserving 1:1 facial aspect ratio without distortion.
-   - Bilinear interpolation to $224 \times 224$ with ImageNet channel standardization.
-4. **End-to-End Modular Engineering**:
-   The project is organized into self-contained, reproducible pipeline steps from data inspection, manifest validation, frame visualizers, single-video tensor traces, and memory profiling to mixed-precision (AMP) training.
-
----
-
-## 📐 System Architecture & Data Flow
-
-```mermaid
-flowchart TD
-    subgraph DataIngestion ["1. Data Ingestion & Preprocessing"]
-        RawVid["BioVid Part A MP4 Videos\n(1388x1038 @ 25 FPS, 138 frames)"]
-        UniformSample["Uniform Temporal Sampling\n(Extract T = 16 frames)"]
-        CropResize["Center Crop (1038x1038) -> Resize (224x224)\nImageNet Normalization"]
-        TensorBatch["Video Batch Tensor\nShape: [B, T=16, C=3, H=224, W=224]"]
-    end
-
-    subgraph SpatialEncoder ["2. Factorized Spatial Encoder"]
-        Tubelet["Tubelet Conv3d Projection (1x16x16)\n(196 spatial tokens per frame)"]
-        SpatialCLS["Prepend Spatial [CLS] Token\n+ Learnable Spatial Positional Embeddings"]
-        SpatialTF["4x Spatial Transformer Blocks\n(Multi-Head Attention: 4 heads, Dim: 256)"]
-        ExtractSpatialCLS["Extract Spatial [CLS] per Frame\nFrame Embeddings: [B, 16, 256]"]
-    end
-
-    subgraph TemporalEncoder ["3. Factorized Temporal Encoder"]
-        TemporalCLS["Prepend Temporal [CLS] Token\n+ Learnable Temporal Positional Embeddings"]
-        TemporalTF["4x Temporal Transformer Blocks\n(Multi-Head Attention: 4 heads, Dim: 256)"]
-        ExtractTemporalCLS["Extract Video Representation Vector\nShape: [B, 256]"]
-    end
-
-    subgraph ClassificationHead ["4. Classification & Metrics"]
-        LayerNorm["LayerNorm + Dropout(0.1)"]
-        LinearProj["Linear Projection: 256 -> 5 Classes"]
-        SoftmaxLogits["Class Logits: [B, 5]\n(BL1, PA1, PA2, PA3, PA4)"]
-        LossMetrics["CrossEntropyLoss (AdamW)\nMetrics: Accuracy, Macro F1, Confusion Matrix"]
-    end
-
-    RawVid --> UniformSample --> CropResize --> TensorBatch
-    TensorBatch --> Tubelet --> SpatialCLS --> SpatialTF --> ExtractSpatialCLS
-    ExtractSpatialCLS --> TemporalCLS --> TemporalTF --> ExtractTemporalCLS
-    ExtractTemporalCLS --> LayerNorm --> LinearProj --> SoftmaxLogits --> LossMetrics
+```
+BioVid-DL/
+├── Part_1_Pain_Recognition/
+│   ├── dataset_analysis/
+│   ├── preprocessing/
+│   ├── models/ (resnet50, vivit, cnn_lstm)
+│   ├── results/ (graphs, confusion_matrices, metrics, predictions, training_curves)
+│   ├── Part_1_Pain_Recognition_Report.docx
+│   ├── Part_1_Pain_Recognition_Report.pdf
+│   └── reports/ (Part_1_Pain_Recognition_Report.docx, .pdf)
+├── Part_2_Emotion_Recognition/
+│   ├── dataset_analysis/
+│   ├── preprocessing/
+│   ├── models/ (3d_cnn, video_swin_transformer)
+│   ├── results/ (graphs, confusion_matrices, metrics, predictions, training_curves)
+│   ├── Part_2_Emotion_Recognition_Report.docx
+│   ├── Part_2_Emotion_Recognition_Report.pdf
+│   └── reports/ (Part_2_Emotion_Recognition_Report.docx, .pdf)
+├── Part_3_Multimodal_Recognition/
+│   ├── dataset_analysis/
+│   ├── preprocessing/
+│   ├── models/ (multimodal_cnn)
+│   ├── results/ (graphs, signal_analysis, confusion_matrices, metrics, predictions, ablation_studies)
+│   ├── Part_3_Multimodal_Recognition_Report.docx
+│   ├── Part_3_Multimodal_Recognition_Report.pdf
+│   └── reports/ (Part_3_Multimodal_Recognition_Report.docx, .pdf)
+├── Final_Comparative_Analysis/
+│   ├── graphs/
+│   ├── metrics/
+│   ├── Final_Comparative_Research_Report.docx
+│   ├── Final_Comparative_Research_Report.pdf
+│   └── reports/ (Final_Comparative_Research_Report.docx, .pdf)
+├── shared/
+│   ├── dataset_inventory/
+│   ├── subject_splits/
+│   ├── preprocessed_cache/
+│   └── cached_dataset.py
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
-## 🗃️ The BioVid Heat Pain Database
+## 2. Dataset Overview Across Parts A–E
 
-The [BioVid Heat Pain Database](https://www.nit.ovgu.de/BioVid.html) was created by the University of Ulm and Otto-von-Guericke University Magdeburg (Ph. Werner, A. Al-Hamadi, S. Walter, et al.).
-
-- **Part A Specs**: 87 healthy human subjects, $8,700$ individual video trials recorded in full HD.
-- **Stimulation Device**: Computer-controlled **Medoc PATHWAY Thermal Stimulator** with an advanced thermode attached to the right forearm.
-- **Trial Design**: Each trial lasts **$5.5$ seconds** (consisting of thermal ramp-up, peak plateau hold, and ramp-down) followed by an 8–12 second randomized recovery pause to avoid habituation.
-- **Class Balance**: Every subject has exactly 100 trials ($20 \times \text{BL1}$, $20 \times \text{PA1}$, $20 \times \text{PA2}$, $20 \times \text{PA3}$, $20 \times \text{PA4}$).
-
-<div align="center">
-  <img src="outputs/visualizations/biovid_sample_grid.png" alt="BioVid Sample Grid Visualization" width="850"/>
-  <p><i>Figure 1: Extracted and preprocessed BioVid video frame sequences across multiple subjects and pain classes.</i></p>
-</div>
+| Dataset Part | Subjects | Samples / Recordings | Primary Prediction Task | Target Class Labels | Video Properties | Biosignal Channels |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Part A** | 87 | 8,700 short trials | Pain Intensity | 5 classes: `BL1` (0), `PA1` (1), `PA2` (2), `PA3` (3), `PA4` (4) | 1388×1038 @ 25 fps (5.52 s) | 512 Hz: GSR, ECG, EMG (trap, corr, zyg) |
+| **Part B** | 86 | 8,600 short trials | Pain Intensity | 5 classes: `BL1` (0), `PA1` (1), `PA2` (2), `PA3` (3), `PA4` (4) | 1388×1038 @ 25 fps (5.52 s) | 512 Hz: GSR, ECG, EMG (trap, corr, zyg) |
+| **Part C** | 87 | 87 continuous sessions | Pain Intensity (Continuous) | Stimulus segmented into 5 classes (BL1..PA4) | 1388×1038 @ 25 fps (~25.3 min) | 512 Hz raw signals + 32 Hz stimulus timestamps |
+| **Part D** | 90 | 630 clips | Emotion Recognition | 7 classes: `anger`, `disgust`, `fear`, `happy`, `neutral`, `pain`, `sad` | 1388×1038 @ 25 fps (60.04 s) | 512 Hz: GSR, ECG, EMG |
+| **Part E** *(BioVidEmoDB)* | 86 | 430 clips | Emotion Recognition | 5 classes: `amusement`, `anger`, `disgust`, `fear`, `sad` | 1388×1038 @ 25 fps (114.04 s) | 512 Hz: SCL (GSR), ECG, EMG (trap) |
 
 ---
 
-## 🧠 ViViT Model 2: Factorized Spatial-Temporal Encoder
+## 3. Deep Learning Architectures Implemented
 
-Standard 3D CNNs or dense Vision Transformers encounter prohibitive computational complexity when modeling video sequences. ViViT Model 2 decouples spatial and temporal attention:
+### Part 1: Pain Intensity Recognition
+1. **ResNet-50**: Pretrained 2D spatial feature extractor (49 conv layers) with global temporal average pooling across video frames.
+2. **ViViT (Video Vision Transformer)**: Factorized spatio-temporal encoder architecture (Model 2, Arnab et al., ICCV 2021) utilizing 3D tubelet embedding, 4-layer Spatial Transformer block, and 4-layer Temporal Transformer block with temporal `[CLS]` token classification.
+3. **CNN-LSTM**: Pretrained ResNet-18 spatial feature extractor coupled with a 2-layer Bidirectional LSTM for dynamic temporal trajectory modeling.
 
-### 1. Spatial Tokenization
-Each frame $\mathbf{x}_t \in \mathbb{R}^{C \times H \times W}$ is partitioned into non-overlapping patches of size $P \times P$ ($16 \times 16$), yielding $N = \frac{HW}{P^2} = 196$ tokens:
-$$\mathbf{z}_{t, 0} = \left[ \mathbf{v}_{\text{cls, spatial}} ; \; \mathbf{E}\mathbf{x}_{t}^{(1)} ; \; \mathbf{E}\mathbf{x}_{t}^{(2)} ; \; \dots ; \; \mathbf{E}\mathbf{x}_{t}^{(N)} \right] + \mathbf{E}_{\text{pos, spatial}}$$
+### Part 2: Emotion Recognition
+1. **3D CNN (R3D-18)**: Native 3D spatio-temporal convolutions capturing spatial facial features and motion velocity simultaneously.
+2. **Video Swin Transformer**: Shifted-window spatio-temporal self-attention operating on 3D patch tubelets, capturing long-range micro-expression dependencies.
 
-### 2. Spatial Encoding
-Across $L_s$ spatial transformer layers, self-attention operates exclusively among tokens of the same frame:
-$$\mathbf{z}_{t, l}' = \text{MSA}(\text{LN}(\mathbf{z}_{t, l-1})) + \mathbf{z}_{t, l-1}, \quad \mathbf{z}_{t, l} = \text{MLP}(\text{LN}(\mathbf{z}_{t, l}')) + \mathbf{z}_{t, l}'$$
-The spatial representation of frame $t$ is the final spatial class token: $\mathbf{h}_t = \mathbf{z}_{t, L_s}^{(0)} \in \mathbb{R}^{d}$.
-
-### 3. Temporal Encoding
-The temporal sequence of frame representations $\mathbf{H} = [\mathbf{h}_1, \mathbf{h}_2, \dots, \mathbf{h}_T]$ is prepended with a temporal `[CLS]` token:
-$$\mathbf{y}_0 = \left[ \mathbf{v}_{\text{cls, temporal}} ; \; \mathbf{h}_1 ; \; \mathbf{h}_2 ; \; \dots ; \; \mathbf{h}_T \right] + \mathbf{E}_{\text{pos, temporal}}$$
-After $L_t$ temporal transformer blocks, the temporal `[CLS]` token $\mathbf{y}_{L_t}^{(0)}$ encapsulates the global spatio-temporal dynamics and is passed to the classification head.
-
----
-
-## 📁 Repository Structure
-
-```
-BioVid-DL-Project/
-├── README.md                          # Comprehensive project documentation
-├── BIOVID_VIVIT_PROJECT_GUIDE.md      # In-depth architectural & theoretical guide
-├── run_pipeline.py                    # Master orchestrator running all steps (1 -> 6)
-├── step1_inspect_dataset.py           # Validates storage structure, MP4 codecs, metadata
-├── step2_build_manifest_and_splits.py # Subject-level split generator (train/val/test CSVs)
-├── step3_visualize_samples.py         # Visual sample grid generator & aspect analyzer
-├── step4_trace_single_video.py        # Single video tensor verification & pipeline trace
-├── step5_memory_test.py               # GPU VRAM profiler (forward/backward passes)
-├── step6_train_and_evaluate.py        # ViViT training, validation, metrics & checkpointing
-├── src/
-│   ├── __init__.py
-│   ├── config.py                      # Centralized configuration, hyperparams, and paths
-│   ├── dataset.py                     # PyTorch Dataset with uniform sampling & transforms
-│   ├── utils.py                       # Logging, confusion matrix plotting, metric computation
-│   └── models/
-│       ├── __init__.py
-│       └── vivit.py                   # PyTorch ViViT Model 2 (Factorized Encoder)
-├── outputs/
-│   ├── checkpoints/                   # Saved PyTorch checkpoints (best_model.pt, last_model.pt)
-│   ├── evaluation/                    # Generated confusion matrices and error reports
-│   │   └── confusion_matrix.png
-│   ├── logs/                          # Configuration dump, label mapping, training history
-│   │   ├── config.yaml
-│   │   ├── label_mapping.json
-│   │   ├── test_metrics.json
-│   │   ├── test_predictions.csv
-│   │   └── training_history.csv
-│   ├── manifest/                      # Subject-isolated split manifests
-│   │   ├── biovid_manifest.csv
-│   │   ├── train.csv
-│   │   ├── val.csv
-│   │   └── test.csv
-│   └── visualizations/                # Generated sample grids
-│       └── biovid_sample_grid.png
-└── sample_inspection/                 # Cropped debug frames for inspection
-```
+### Part 3: Multimodal Pain & Emotion Recognition
+1. **Multimodal CNN**:
+   - **Visual Branch**: Pretrained ResNet-18 spatial encoder + temporal pooling (`dim=512`).
+   - **Physiological Branch**: Multi-channel 1D CNN with hierarchical convolutional blocks for GSR, ECG, and EMG (`dim=256`).
+   - **Fusion Layer**: Concatenation + LayerNorm + Dropout + projection MLP (`dim=256`).
+   - **Task Heads**: Separate heads for Pain (5 classes) and Emotion (7/5 classes).
+   - **Ablation Configurations**: Multimodal Fusion, Video-Only, All-Biosignals-Only, GSR-Only, ECG-Only, and EMG-Only.
 
 ---
 
-## ⚙️ Installation & Environment Setup
+## 4. Key Experimental Results & Scientific Benchmarks
 
-### 1. Clone the Repository
+### Pain Recognition Comparison (Part 1 & Part 3 Matched Test Subjects)
+| Model Architecture | Accuracy | Macro-F1 | Weighted-F1 | Latency (ms) | Parameter Count |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **ResNet-50** | 0.2350 | 0.1939 | 0.1939 | 18.9 ms | 24,559,685 |
+| **ViViT** | 0.2200 | 0.1158 | 0.1158 | 19.3 ms | 4,469,765 |
+| **CNN-LSTM** | 0.1900 | 0.1100 | 0.1100 | 18.3 ms | 14,463,045 |
+| **Multimodal CNN (Fusion)** | **0.2300** | **0.1821** | **0.1821** | **18.0 ms** | **11,542,933** |
+| *Video-Only (Multimodal CNN)* | *0.1900* | *0.0655* | *0.0655* | *18.0 ms* | *11,542,933* |
+| *All-Biosignals-Only* | *0.2050* | *0.0838* | *0.0838* | *18.5 ms* | *11,542,933* |
+
+### Emotion Recognition Benchmark (Part 2)
+| Protocol & Model | Accuracy | Macro-F1 | Weighted-F1 | Latency (ms) | Parameter Count |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Part D (7 Classes) — 3D CNN (R3D-18)** | 0.1923 | 0.1154 | 0.1189 | 18.7 ms | 33,299,399 |
+| **Part D (7 Classes) — Video Swin** | 0.1538 | 0.0654 | 0.0799 | 13.1 ms | 1,024,903 |
+| **Part E (5 Classes) — 3D CNN (R3D-18)** | **0.3750** | **0.2882** | **0.2630** | 19.2 ms | 33,298,885 |
+| **Part E (5 Classes) — Video Swin** | 0.2083 | 0.1127 | 0.1008 | 13.0 ms | 1,024,389 |
+
+### Modality Ablation Breakdown (Part 3)
+| Configuration | Modality Channels | Accuracy | Macro-F1 | Key Scientific Finding |
+| :--- | :--- | :--- | :--- | :--- |
+| **Complete Fusion** | Video + GSR + ECG + EMG | **0.2300** | **0.1821** | **Highest overall accuracy and balanced macro-F1** |
+| **Video Only** | Video only | 0.1900 | 0.0655 | Vulnerable to facial masking |
+| **All Biosignals** | GSR + ECG + EMG | 0.2050 | 0.0838 | Captures involuntary autonomic activation |
+| **GSR Only** | Galvanic Skin Response | 0.2000 | 0.0667 | Most decisive individual physiological channel |
+| **ECG Only** | Electrocardiogram | 0.2000 | 0.0667 | Contributes baseline autonomic tone |
+| **EMG Only** | Electromyography | 0.1850 | 0.0979 | Contributes muscular contraction spikes |
+
+---
+
+## 5. Reproduction & Execution Instructions
+
+### Environment Setup
 ```bash
-git clone https://github.com/Omganesh014/BioVid-DL-Project.git
-cd BioVid-DL-Project
+# Activate virtual environment
+source /home/acernitro/.venvs/main/bin/activate
+
+# Install dependencies
+pip install -r BioVid-DL/requirements.txt
 ```
 
-### 2. Create Virtual Environment
+### Pipeline Execution Order
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-```
+# Phase 2: Generate dataset inventory and statistics
+python BioVid-DL/shared/dataset_inventory/generate_inventory.py
 
-### 3. Install Dependencies
-```bash
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
-pip install opencv-python pandas numpy matplotlib seaborn scikit-learn pyyaml pillow
+# Phase 3: Generate subject-independent splits and signal plots
+python BioVid-DL/shared/subject_splits/make_splits.py
+python BioVid-DL/Part_1_Pain_Recognition/preprocessing/segment_part_c.py
+python BioVid-DL/Part_3_Multimodal_Recognition/preprocessing/signal_processor.py
+
+# Pre-extract cached spatial frames and signals
+python BioVid-DL/shared/preprocess_and_cache.py
+
+# Phase 4 & 5: Train and evaluate Part 1 models & compile reports
+python BioVid-DL/Part_1_Pain_Recognition/train_part1_fast.py
+python BioVid-DL/Part_1_Pain_Recognition/reports/generate_report.py
+
+# Phase 6 & 7: Train and evaluate Part 2 emotion models & compile reports
+python BioVid-DL/Part_2_Emotion_Recognition/train_part2_fast.py
+python BioVid-DL/Part_2_Emotion_Recognition/reports/generate_report.py
+
+# Phase 8, 9 & 10: Train Multimodal CNN, execute ablations & compile reports
+python BioVid-DL/Part_3_Multimodal_Recognition/train_part3.py
+python BioVid-DL/Part_3_Multimodal_Recognition/reports/generate_report.py
+
+# Phase 11: Run final comparative synthesis & compile research reports
+python BioVid-DL/Final_Comparative_Analysis/run_final_comparison.py
+python BioVid-DL/Final_Comparative_Analysis/reports/generate_final_report.py
 ```
 
 ---
 
-## 🚀 End-to-End Pipeline Execution
+## 6. Generated Publication Reports
 
-You can run the full end-to-end pipeline with a single master command:
+All four academic reports have been generated and exported as both `.docx` and `.pdf`:
 
-```bash
-python run_pipeline.py
-```
+1. **Part 1 Pain Recognition Report**:
+   - `BioVid-DL/Part_1_Pain_Recognition/Part_1_Pain_Recognition_Report.docx`
+   - `BioVid-DL/Part_1_Pain_Recognition/Part_1_Pain_Recognition_Report.pdf`
+   - *(Also available in `Part_1_Pain_Recognition/reports/`)*
 
-Or execute individual stages modularly:
+2. **Part 2 Emotion Recognition Report**:
+   - `BioVid-DL/Part_2_Emotion_Recognition/Part_2_Emotion_Recognition_Report.docx`
+   - `BioVid-DL/Part_2_Emotion_Recognition/Part_2_Emotion_Recognition_Report.pdf`
+   - *(Also available in `Part_2_Emotion_Recognition/reports/`)*
 
-### Stage 1: Inspect Dataset & Verify Video Codecs
-```bash
-python step1_inspect_dataset.py
-```
-*Discovers video dimensions ($1388 \times 1038$), framerate ($25\text{ FPS}$), duration ($5.5\text{ s}$), and verifies labels.*
+3. **Part 3 Multimodal Recognition Report**:
+   - `BioVid-DL/Part_3_Multimodal_Recognition/Part_3_Multimodal_Recognition_Report.docx`
+   - `BioVid-DL/Part_3_Multimodal_Recognition/Part_3_Multimodal_Recognition_Report.pdf`
+   - *(Also available in `Part_3_Multimodal_Recognition/reports/`)*
 
-### Stage 2: Generate Subject-Independent Manifests
-```bash
-python step2_build_manifest_and_splits.py
-```
-*Builds `outputs/manifest/biovid_manifest.csv` and partitions subjects into `train.csv`, `val.csv`, and `test.csv` with zero subject overlap.*
-
-### Stage 3: Sample Grid Visualizations
-```bash
-python step3_visualize_samples.py
-```
-*Generates visual sample grids across pain classes and saves them to `outputs/visualizations/biovid_sample_grid.png`.*
-
-### Stage 4: Single Video Tensor Trace
-```bash
-python step4_trace_single_video.py
-```
-*Verifies temporal decimation ($T=16$), center cropping, tensor shapes `[1, 16, 3, 224, 224]`, and model forward compatibility.*
-
-### Stage 5: GPU VRAM Memory Profiling
-```bash
-python step5_memory_test.py
-```
-*Simulates batches under mixed-precision (AMP) to measure forward and backward GPU memory consumption.*
-
-### Stage 6: Train & Evaluate Model
-```bash
-python step6_train_and_evaluate.py
-```
-*Trains ViViT Model 2 using AdamW with Cosine Annealing, logs history to CSV, saves checkpoints, and outputs confusion matrix and test metrics.*
-
----
-
-## 📊 Experimental Results & Evaluation
-
-The pipeline outputs complete test metrics, class-wise F1-scores, and confusion matrices:
-
-<div align="center">
-  <img src="outputs/evaluation/confusion_matrix.png" alt="Confusion Matrix" width="550"/>
-  <p><i>Figure 2: 5-Class Pain Level Confusion Matrix on unseen test subjects (BL1, PA1, PA2, PA3, PA4).</i></p>
-</div>
-
-### Metric Summary
-All evaluations are performed on **unseen test subjects** to guarantee generalizability:
-- **Accuracy**: Evaluated over 5 classes on held-out test subjects.
-- **Detailed Logs**: Stored in [`outputs/logs/test_metrics.json`](outputs/logs/test_metrics.json).
-- **Per-Sample Analysis**: Stored in [`outputs/logs/test_predictions.csv`](outputs/logs/test_predictions.csv) with ground-truth vs. predicted labels.
-
----
-
-## 🛠️ Hyperparameters & Hardware Setup
-
-| Category | Parameter | Value |
-|:---|:---|:---|
-| **Hardware** | GPU | NVIDIA GeForce RTX 4050 Laptop GPU |
-| | CUDA / PyTorch | CUDA 12.6 / PyTorch 2.14+ |
-| | Acceleration | Automatic Mixed Precision (AMP `fp16`) |
-| **Model** | Spatial Layers ($L_s$) | $4$ Transformer Blocks |
-| | Temporal Layers ($L_t$) | $4$ Transformer Blocks |
-| | Embedding Dimension ($d$) | $256$ |
-| | Attention Heads | $4$ |
-| | MLP Hidden Dimension | $512$ |
-| | Dropout | $0.1$ |
-| **Inputs** | Sampled Frames ($T$) | $16$ uniformly sampled frames |
-| | Image Resolution | $224 \times 224$ (Center crop from $1038 \times 1038$) |
-| | Patch / Tubelet Size | $16 \times 16$ (Tubelet $t=1$) |
-| **Optimization** | Optimizer | AdamW |
-| | Learning Rate | $1 \times 10^{-4}$ with CosineAnnealingLR |
-| | Weight Decay | $0.01$ |
-| | Loss Function | CrossEntropyLoss |
-| | Gradient Clipping | $1.0$ |
-
----
-
-## 📚 References & Citation
-
-If you use this codebase or architecture for research, please cite the underlying foundational works:
-
-```bibtex
-@article{arnab2021vivit,
-  title={ViViT: A Video Vision Transformer},
-  author={Arnab, Anurag and Dehghani, Mostafa and Heigold, Georg and Sun, Chen and Lu{\v{c}}i{\'c}, Mario and Schmid, Cordelia},
-  journal={Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
-  pages={6836--6846},
-  year={2021}
-}
-
-@article{werner2019biovid,
-  title={The BioVid Heat Pain Database: Data for the Automated Recognition of Pain from Video and Physiological Signals},
-  author={Werner, Philipp and Al-Hamadi, Ayoub and Limbrecht-Ecklundt, Kerstin and Walter, Steffen and Gruss, Sascha and Traue, Harald C},
-  journal={IEEE Transactions on Affective Computing},
-  year={2019}
-}
-```
-
----
-
-<div align="center">
-  <sub>Developed by <b>Omganesh Matiwade</b>. Built with PyTorch and Video Vision Transformers.</sub>
-</div>
+4. **Final Comparative Research Report**:
+   - `BioVid-DL/Final_Comparative_Analysis/Final_Comparative_Research_Report.docx`
+   - `BioVid-DL/Final_Comparative_Analysis/Final_Comparative_Research_Report.pdf`
+   - *(Also available in `Final_Comparative_Analysis/reports/`)*

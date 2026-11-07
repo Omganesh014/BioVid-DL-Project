@@ -1,0 +1,25 @@
+{
+  "total_records": 18447,
+  "parts": {
+    "PartA": 8700,
+    "PartB": 8600,
+    "PartD": 630,
+    "PartE": 430,
+    "PartC": 87
+  },
+  "tasks": {
+    "pain": 17300,
+    "emotion": 1060,
+    "pain_continuous": 87
+  },
+  "subjects_per_part": {
+    "PartA": 87,
+    "PartB": 86,
+    "PartC": 87,
+    "PartD": 90,
+    "PartE": 86
+  },
+  "video_verified": 18447,
+  "bio_raw_verified": 18447,
+  "bio_filtered_verified": 17300
+}
