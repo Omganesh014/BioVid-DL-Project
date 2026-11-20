@@ -10,13 +10,13 @@ class ProjectConfig:
     db_root: Path = Path("/run/media/acernitro/Ventoy/DB")
     part_a_root: Path = Path("/run/media/acernitro/Ventoy/DB/PartA")
     samples_csv_path: Path = Path("/run/media/acernitro/Ventoy/DB/PartA/starting_point/samples.csv")
-    project_root: Path = Path("/home/acernitro/Desktop/X3D/ACDMICS/DL/proj")
-    output_dir: Path = Path("/home/acernitro/Desktop/X3D/ACDMICS/DL/proj/outputs")
-    manifest_dir: Path = Path("/home/acernitro/Desktop/X3D/ACDMICS/DL/proj/outputs/manifest")
-    checkpoints_dir: Path = Path("/home/acernitro/Desktop/X3D/ACDMICS/DL/proj/outputs/checkpoints")
-    logs_dir: Path = Path("/home/acernitro/Desktop/X3D/ACDMICS/DL/proj/outputs/logs")
-    visualizations_dir: Path = Path("/home/acernitro/Desktop/X3D/ACDMICS/DL/proj/outputs/visualizations")
-    evaluation_dir: Path = Path("/home/acernitro/Desktop/X3D/ACDMICS/DL/proj/outputs/evaluation")
+    project_root: Path = field(default_factory=lambda: Path(__file__).resolve().parent.parent)
+    output_dir: Path = field(init=False)
+    manifest_dir: Path = field(init=False)
+    checkpoints_dir: Path = field(init=False)
+    logs_dir: Path = field(init=False)
+    visualizations_dir: Path = field(init=False)
+    evaluation_dir: Path = field(init=False)
 
     # --- Dataset & Labels ---
     label_map: Dict[int, str] = field(default_factory=lambda: {
@@ -64,6 +64,13 @@ class ProjectConfig:
     test_ratio: float = 0.15       # ~13 subjects
 
     def __post_init__(self):
+        self.output_dir = self.project_root / "outputs"
+        self.manifest_dir = self.output_dir / "manifest"
+        self.checkpoints_dir = self.output_dir / "checkpoints"
+        self.logs_dir = self.output_dir / "logs"
+        self.visualizations_dir = self.output_dir / "visualizations"
+        self.evaluation_dir = self.output_dir / "evaluation"
+
         for d in [
             self.output_dir,
             self.manifest_dir,
