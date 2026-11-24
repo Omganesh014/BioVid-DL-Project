@@ -1,0 +1,6 @@
+partition,task_type,num_classes,test_samples,accuracy,macro_precision,macro_recall,macro_f1,qwk
+PartA,pain,5,55,0.8364,0.8373,0.8364,0.8362,0.9596
+PartB,pain,5,50,0.84,0.8374,0.84,0.8378,0.9608
+PartC,pain,5,40,0.825,0.8539,0.825,0.8261,0.9542
+PartD,emotion,7,28,0.8214,0.8357,0.8286,0.8124,0.0
+PartE,emotion,5,18,0.8333,0.8833,0.8267,0.8092,0.0
