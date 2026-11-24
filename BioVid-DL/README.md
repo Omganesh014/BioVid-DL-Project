@@ -177,8 +177,8 @@ pip install -r requirements.txt
 
 ### 2. Execution Commands
 ```bash
-# Run the complete Multi-Part College Benchmark (Parts A–E, ~83.25% overall accuracy)
-python train_college_pipeline.py
+# Run the complete end-to-end training & evaluation pipeline inside the master notebook
+jupyter notebook project.ipynb
 
 # Launch real-time webcam inference HUD demo
 python demo_webcam.py

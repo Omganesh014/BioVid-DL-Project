@@ -153,8 +153,7 @@ This occurred due to a truncated gradient horizon relative to AdamW running mome
 
 ```
 .
-├── project.ipynb                                        # End-to-end 15-section master Jupyter notebook
-├── train_college_pipeline.py                            # Multi-part training & evaluation pipeline (Parts A–E)
+├── project.ipynb                                        # End-to-end 15-section master Jupyter notebook (includes Parts A–E training & evaluation)
 ├── demo_webcam.py                                       # Real-time webcam / MJPEG inference HUD demo
 ├── requirements.txt                                     # Project Python dependencies
 ├── src/                                                 # Core ViViT config, dataset, model, and utilities
@@ -192,8 +191,8 @@ pip install -r requirements.txt
 
 ### 2. Execution Commands
 ```bash
-# Run the complete Multi-Part College Benchmark (Parts A–E, ~83.25% overall accuracy)
-python train_college_pipeline.py
+# Run the complete end-to-end training & evaluation pipeline inside the master notebook
+jupyter notebook project.ipynb
 
 # Launch real-time webcam inference HUD demo
 python demo_webcam.py
