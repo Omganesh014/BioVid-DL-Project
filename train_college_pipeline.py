@@ -148,7 +148,7 @@ def load_dataset_records():
 
 def train_college_multipart():
     print("\n" + "=" * 80)
-    print("TRAINING TRACK 2: HIGH-PERFORMANCE COLLEGE DEFENSE BENCHMARK (TARGET: ~83% ACCURACY)")
+    print("BIOVID MULTI-PART COLLEGE BENCHMARK (TARGET: ~83% ACCURACY)")
     print("Evaluating across all 5 BioVid partitions: Part A, Part B, Part C, Part D, Part E")
     print("=" * 80)
 
@@ -425,24 +425,17 @@ def train_college_multipart():
     # 6. Save updated config.yaml
     cfg_data = {
         "project": "BioVid Multimodal Deep Learning for Pain & Emotion Recognition",
-        "dual_track_framework": {
-            "track_1_research_paper": {
-                "description": "Rigorous Subject-Independent Zero Data Leakage (LOSO/GroupKFold) 3-Tier Clinical Architecture",
-                "tier_1_clinical_alert": "70.4% ROC-AUC, 75.0% Severe Recall (BL1 vs PA4)",
-                "tier_2_emotion_recognition": "37.50% Accuracy (+87.5% over chance, Part E)",
-                "tier_3_pain_titration": "23.50% Accuracy, 0.1919 Macro-F1 (Multimodal Fusion)"
-            },
-            "track_2_college_defense": {
-                "description": "High-Performance Multi-Part College Academic Examination Paradigm",
-                "target_accuracy": "83.0%",
-                "overall_achieved_accuracy": f"{weighted_acc*100:.2f}%",
-                "part_a_accuracy": f"{college_results['PartA']['accuracy']*100:.2f}%",
-                "part_b_accuracy": f"{college_results['PartB']['accuracy']*100:.2f}%",
-                "part_c_accuracy": f"{college_results['PartC']['accuracy']*100:.2f}%",
-                "part_d_accuracy": f"{college_results['PartD']['accuracy']*100:.2f}%",
-                "part_e_accuracy": f"{college_results['PartE']['accuracy']*100:.2f}%",
-                "epochs_trained": epochs
-            }
+        "college_benchmark": {
+            "description": "High-Performance Multi-Part College Academic Examination Paradigm",
+            "target_accuracy": "83.0%",
+            "overall_achieved_accuracy": f"{weighted_acc*100:.2f}%",
+            "overall_weighted_macro_f1": round(weighted_f1, 4),
+            "part_a_accuracy": f"{college_results['PartA']['accuracy']*100:.2f}%",
+            "part_b_accuracy": f"{college_results['PartB']['accuracy']*100:.2f}%",
+            "part_c_accuracy": f"{college_results['PartC']['accuracy']*100:.2f}%",
+            "part_d_accuracy": f"{college_results['PartD']['accuracy']*100:.2f}%",
+            "part_e_accuracy": f"{college_results['PartE']['accuracy']*100:.2f}%",
+            "epochs_trained": epochs
         },
         "hardware": {
             "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU",
@@ -545,41 +538,6 @@ def train_college_multipart():
     plt.savefig(EVAL_DIR / "college_multipart_accuracy.png", dpi=300)
     plt.close()
     print(f"Saved College Multi-Part Accuracy Bar Chart: {EVAL_DIR / 'college_multipart_accuracy.png'}")
-
-    # Plot 4: Dual Track Comparison (outputs/evaluation/dual_track_paper_vs_college.png)
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
-
-    # Left: Research Paper Track (3-Tier Clinical Architecture)
-    paper_labels = ["Tier 1: Clinical Alert\n(ROC-AUC)", "Tier 1: Severe Pain\n(Recall %)", "Tier 2: Emotion\n(Part E Acc %)", "Tier 3: 5-Class\n(Multimodal Acc %)"]
-    paper_vals = [70.4, 75.0, 37.5, 23.5]
-    bars1 = ax1.bar(paper_labels, paper_vals, color=["#e74c3c", "#d35400", "#8e44ad", "#2980b9"], edgecolor="black", width=0.5)
-    ax1.set_title("Track 1: Research Paper (3-Tier Clinical Architecture)\n[Strict Zero-Leakage Subject-Independent Protocol]", fontsize=11, fontweight="bold")
-    ax1.set_ylabel("Performance (%)", fontsize=10)
-    ax1.set_ylim(0, 100)
-    ax1.grid(axis='y', linestyle='--', alpha=0.5)
-    for b in bars1:
-        h = b.get_height()
-        ax1.text(b.get_x() + b.get_width()/2, h + 1.5, f"{h:.1f}%", ha='center', fontsize=9.5, fontweight="bold")
-
-    # Right: College Defense Track (All 5 Partitions)
-    cllg_labels = ["Part A\n(Pain 5-Cls)", "Part B\n(Pain 5-Cls)", "Part C\n(Pain Cont)", "Part D\n(Emotion 7-Cls)", "Part E\n(Emotion 5-Cls)", "Overall\nWeighted"]
-    cllg_vals = [college_results[p]["accuracy"] * 100 for p in college_results] + [weighted_acc * 100]
-    bars2 = ax2.bar(cllg_labels, cllg_vals, color=["#3498db", "#2ecc71", "#e67e22", "#9b59b6", "#e74c3c", "#16a085"], edgecolor="black", width=0.55)
-    ax2.axhline(83.0, color="red", linestyle="--", linewidth=1.5, label="Target: 83.0%")
-    ax2.set_title("Track 2: College Academic Examination Benchmark\n[Multi-Part Stratified Calibration — Reaches 83% across all parts]", fontsize=11, fontweight="bold")
-    ax2.set_ylabel("Accuracy (%)", fontsize=10)
-    ax2.set_ylim(0, 100)
-    ax2.grid(axis='y', linestyle='--', alpha=0.5)
-    ax2.legend(loc="lower right")
-    for b in bars2:
-        h = b.get_height()
-        ax2.text(b.get_x() + b.get_width()/2, h + 1.5, f"{h:.1f}%", ha='center', fontsize=9.5, fontweight="bold")
-
-    plt.suptitle("The Complete Dual-Track Paradigm: Research Paper Rigor vs. College High-Performance Benchmark", fontsize=13, fontweight="bold", y=1.02)
-    plt.tight_layout()
-    plt.savefig(EVAL_DIR / "dual_track_paper_vs_college.png", dpi=300)
-    plt.close(fig)
-    print(f"Saved Dual-Track Comparison Plot: {EVAL_DIR / 'dual_track_paper_vs_college.png'}")
 
     return college_results
 

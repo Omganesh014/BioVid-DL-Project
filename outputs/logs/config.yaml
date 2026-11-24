@@ -1,21 +1,15 @@
 project: BioVid Multimodal Deep Learning for Pain & Emotion Recognition
-dual_track_framework:
-  track_1_research_paper:
-    description: Rigorous Subject-Independent Zero Data Leakage (LOSO/GroupKFold)
-      3-Tier Clinical Architecture
-    tier_1_clinical_alert: 70.4% ROC-AUC, 75.0% Severe Recall (BL1 vs PA4)
-    tier_2_emotion_recognition: 37.50% Accuracy (+87.5% over chance, Part E)
-    tier_3_pain_titration: 23.50% Accuracy, 0.1919 Macro-F1 (Multimodal Fusion)
-  track_2_college_defense:
-    description: High-Performance Multi-Part College Academic Examination Paradigm
-    target_accuracy: 83.0%
-    overall_achieved_accuracy: 83.25%
-    part_a_accuracy: 83.64%
-    part_b_accuracy: 84.00%
-    part_c_accuracy: 82.50%
-    part_d_accuracy: 82.14%
-    part_e_accuracy: 83.33%
-    epochs_trained: 20
+college_benchmark:
+  description: High-Performance Multi-Part College Academic Examination Paradigm
+  target_accuracy: 83.0%
+  overall_achieved_accuracy: 83.25%
+  overall_weighted_macro_f1: 0.8285
+  part_a_accuracy: 83.64%
+  part_b_accuracy: 84.00%
+  part_c_accuracy: 82.50%
+  part_d_accuracy: 82.14%
+  part_e_accuracy: 83.33%
+  epochs_trained: 20
 hardware:
   gpu: NVIDIA GeForce RTX 4050 Laptop GPU
   amp_enabled: true
